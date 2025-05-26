@@ -1,6 +1,7 @@
 package com.HMS.hms.Repo;
 
 import com.HMS.hms.Tables.StudentHallFees;
+import com.HMS.hms.DTO.UnpaidFeesSummaryDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -131,4 +132,17 @@ public interface StudentHallFeesRepo extends JpaRepository<StudentHallFees, Long
 
     // Find by userId and year
     List<StudentHallFees> findByUserIdAndYear(Long userId, Integer year);
+
+    // Get unpaid fees summary for a user (total amount, email, username)
+    @Query("SELECT new com.HMS.hms.DTO.UnpaidFeesSummaryDTO(COALESCE(SUM(hf.fee), 0), u.email, u.username, 'HALL', 'Hall Fees') " +
+           "FROM StudentHallFees shf " +
+           "JOIN Users u ON u.userId = shf.userId " +
+           "JOIN HallFee hf ON hf.type = CASE " +
+           "    WHEN LOWER(shf.studentType) = 'attached' THEN com.HMS.hms.Tables.HallFee$ResidencyType.ATTACHED " +
+           "    WHEN LOWER(shf.studentType) = 'resident' THEN com.HMS.hms.Tables.HallFee$ResidencyType.RESIDENT " +
+           "    ELSE com.HMS.hms.Tables.HallFee$ResidencyType.ATTACHED " +
+           "END AND hf.year = shf.year " +
+           "WHERE shf.userId = :userId AND shf.status = 'UNPAID' " +
+           "GROUP BY u.email, u.username")
+    UnpaidFeesSummaryDTO getUnpaidFeesSummaryByUserId(@Param("userId") Long userId);
 }

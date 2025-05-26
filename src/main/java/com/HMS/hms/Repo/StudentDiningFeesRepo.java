@@ -1,6 +1,7 @@
 package com.HMS.hms.Repo;
 
 import com.HMS.hms.Tables.StudentDiningFees;
+import com.HMS.hms.DTO.UnpaidFeesSummaryDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -124,4 +125,18 @@ public interface StudentDiningFeesRepo extends JpaRepository<StudentDiningFees, 
            "AND sdf.startDate <= df.endDate AND sdf.endDate >= df.startDate " +
            "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID'")
     List<Object[]> getUnpaidFeesWithAmountByUserId(@Param("userId") Long userId);
+
+    // Get unpaid fees summary for a user (total amount, email, username)
+    @Query("SELECT new com.HMS.hms.DTO.UnpaidFeesSummaryDTO(COALESCE(SUM(df.fee), 0), u.email, u.username, 'DINING', 'Dining Fees') " +
+           "FROM StudentDiningFees sdf " +
+           "JOIN Users u ON u.userId = sdf.userId " +
+           "JOIN DiningFee df ON df.type = CASE " +
+           "    WHEN LOWER(sdf.studentType) = 'attached' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
+           "    WHEN LOWER(sdf.studentType) = 'resident' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
+           "    ELSE com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
+           "END AND df.year = sdf.year " +
+           "AND sdf.startDate <= df.endDate AND sdf.endDate >= df.startDate " +
+           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID' " +
+           "GROUP BY u.email, u.username")
+    UnpaidFeesSummaryDTO getUnpaidFeesSummaryByUserId(@Param("userId") Long userId);
 }
