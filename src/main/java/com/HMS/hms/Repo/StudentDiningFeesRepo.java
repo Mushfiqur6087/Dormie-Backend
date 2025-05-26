@@ -1,16 +1,17 @@
 package com.HMS.hms.Repo;
 
-import com.HMS.hms.Tables.StudentDiningFees;
-import com.HMS.hms.DTO.UnpaidFeesSummaryDTO;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import com.HMS.hms.DTO.UnpaidFeesSummaryDTO;
+import com.HMS.hms.Tables.StudentDiningFees;
 
 @Repository
 public interface StudentDiningFeesRepo extends JpaRepository<StudentDiningFees, Long> {
