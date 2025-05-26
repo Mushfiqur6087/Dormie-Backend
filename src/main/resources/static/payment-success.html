@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Successful</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+          background: #f4f4f4;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+          padding: 50px;
+        }
+        .card {
+          background: white;
+          padding: 40px;
+          border-radius: 8px;
+          box-shadow: 0 0 15px rgba(0,0,0,0.1);
+          max-width: 600px;
+          margin: auto;
+        }
+        .success {
+          color: green;
+          font-size: 2em;
+          margin-bottom: 10px;
+        }
+        .details {
+          font-size: 1em;
+          margin-top: 20px;
+          color: #333;
+        }
+        .footer {
+          margin-top: 30px;
+          font-size: 0.9em;
+          color: #888;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="success">✅ Payment Successful</div>
+    <p>Thank you for your payment!</p>
+
+    <div class="details">
+        <p><strong>Transaction ID:</strong> <span id="tran_id">Loading...</span></p>
+        <p><strong>Validation ID:</strong> <span id="val_id">Loading...</span></p>
+    </div>
+
+    <div class="footer">
+        This page was generated for your confirmation. Please keep a screenshot for your records.
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    document.getElementById("tran_id").textContent = urlParams.get("tran_id") || "Unavailable";
+    document.getElementById("val_id").textContent = urlParams.get("val_id") || "Unavailable";
+</script>
+</body>
+</html>
