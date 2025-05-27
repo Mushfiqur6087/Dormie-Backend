@@ -11,13 +11,27 @@ import org.springframework.stereotype.Service;
 
 import com.HMS.hms.DTO.DiningFeeDTO;
 import com.HMS.hms.Repo.DiningFeeRepo;
+import com.HMS.hms.Repo.StudentDiningFeesRepo;
+import com.HMS.hms.Repo.UsersRepo;
 import com.HMS.hms.Tables.DiningFee;
+import com.HMS.hms.Tables.StudentDiningFees;
+import com.HMS.hms.Tables.Students;
+import com.HMS.hms.Tables.Users;
 
 @Service
 public class DiningFeeService {
 
     @Autowired
     private DiningFeeRepo diningFeeRepo;
+    
+    @Autowired
+    private UsersRepo usersRepo;
+    
+    @Autowired
+    private StudentDiningFeesRepo studentDiningFeesRepo;
+    
+    @Autowired
+    private StudentsService studentsService;
 
     // DTO Mapping Methods
     public DiningFeeDTO convertToDTO(DiningFee diningFee) {
@@ -33,7 +47,7 @@ public class DiningFeeService {
 
     public DiningFee convertFromCreateDTO(DiningFeeDTO createDTO) {
         return new DiningFee(
-            createDTO.getType(),
+            "resident", // Always resident for dining fees
             createDTO.getYear(),
             createDTO.getStartDate(),
             createDTO.getEndDate(),
@@ -51,9 +65,47 @@ public class DiningFeeService {
     public DiningFeeDTO createDiningFeeFromDTO(DiningFeeDTO createDTO) {
         DiningFee diningFee = convertFromCreateDTO(createDTO);
         DiningFee savedFee = diningFeeRepo.save(diningFee);
+        
+        // Automatically create StudentDiningFees entries for all students
+        createStudentDiningFeesForAllStudents(savedFee);
+        
         return convertToDTO(savedFee);
     }
-
+    
+    /**
+     * Creates StudentDiningFees entries for resident students only when a new dining fee is created.
+     * Only resident students get dining fees, attached students do not.
+     */
+    private void createStudentDiningFeesForAllStudents(DiningFee diningFee) {
+        // Get all users with STUDENT role
+        List<Users> students = usersRepo.findByRole("STUDENT");
+        
+        for (Users student : students) {
+            // Get student details to check residency status
+            Optional<Students> studentDetails = studentsService.findByUserId(student.getUserId());
+            
+            if (studentDetails.isPresent()) {
+                Students studentInfo = studentDetails.get();
+                
+                // Only create dining fee entry for resident students
+                if ("resident".equalsIgnoreCase(studentInfo.getResidencyStatus())) {
+                    StudentDiningFees studentFee = new StudentDiningFees(
+                        student.getUserId(),
+                        studentInfo.getStudentId(),
+                        studentInfo.getResidencyStatus(),
+                        diningFee.getYear(),
+                        diningFee.getStartDate(),
+                        diningFee.getEndDate(),
+                        StudentDiningFees.PaymentStatus.UNPAID
+                    );
+                    
+                    studentDiningFeesRepo.save(studentFee);
+                }
+                // Skip attached students - they don't get dining fees
+            }
+        }
+    }
+    
     public List<DiningFeeDTO> getAllDiningFeesAsDTO() {
         List<DiningFee> diningFees = diningFeeRepo.findAll();
         return convertToDTOList(diningFees);
@@ -65,9 +117,8 @@ public class DiningFeeService {
     }
 
     public List<DiningFeeDTO> getDiningFeesByTypeAsDTO(String type) {
-        // Convert DTO string type to enum
-        DiningFee.ResidencyType enumType = DiningFee.ResidencyType.fromString(type);
-        List<DiningFee> diningFees = diningFeeRepo.findByType(enumType);
+        // Type is always RESIDENT for dining fees, ignore the parameter
+        List<DiningFee> diningFees = diningFeeRepo.findAll();
         return convertToDTOList(diningFees);
     }
 
@@ -77,16 +128,14 @@ public class DiningFeeService {
     }
 
     public List<DiningFeeDTO> getDiningFeesByTypeAndYearAsDTO(String type, Integer year) {
-        // Convert DTO string type to enum
-        DiningFee.ResidencyType enumType = DiningFee.ResidencyType.fromString(type);
-        List<DiningFee> diningFees = diningFeeRepo.findByTypeAndYear(enumType, year);
+        // Type is always RESIDENT for dining fees, ignore the type parameter
+        List<DiningFee> diningFees = diningFeeRepo.findByYear(year);
         return convertToDTOList(diningFees);
     }
 
     public List<DiningFeeDTO> getActiveDiningFeesByTypeAsDTO(String type) {
-        // Convert DTO string type to enum
-        DiningFee.ResidencyType enumType = DiningFee.ResidencyType.fromString(type);
-        List<DiningFee> diningFees = diningFeeRepo.findActiveByType(enumType, LocalDate.now());
+        // Type is always RESIDENT for dining fees, ignore the type parameter
+        List<DiningFee> diningFees = diningFeeRepo.findActiveByType(DiningFee.ResidencyType.RESIDENT, LocalDate.now());
         return convertToDTOList(diningFees);
     }
 
@@ -104,7 +153,7 @@ public class DiningFeeService {
         Optional<DiningFee> existingFeeOpt = diningFeeRepo.findById(id);
         if (existingFeeOpt.isPresent()) {
             DiningFee existingFee = existingFeeOpt.get();
-            existingFee.setType(updateDTO.getType());
+            existingFee.setType("resident"); // Always resident for dining fees
             existingFee.setYear(updateDTO.getYear());
             existingFee.setStartDate(updateDTO.getStartDate());
             existingFee.setEndDate(updateDTO.getEndDate());
@@ -118,12 +167,12 @@ public class DiningFeeService {
 
     // Legacy entity-based methods (kept for backward compatibility)
     public DiningFee createDiningFee(String type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        DiningFee diningFee = new DiningFee(type, year, startDate, endDate, fee);
+        DiningFee diningFee = new DiningFee("resident", year, startDate, endDate, fee); // Always resident
         return diningFeeRepo.save(diningFee);
     }
 
     public DiningFee createDiningFee(DiningFee.ResidencyType type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        DiningFee diningFee = new DiningFee(type, year, startDate, endDate, fee);
+        DiningFee diningFee = new DiningFee(DiningFee.ResidencyType.RESIDENT, year, startDate, endDate, fee); // Always resident
         return diningFeeRepo.save(diningFee);
     }
 
@@ -140,9 +189,8 @@ public class DiningFeeService {
     }
 
     public List<DiningFee> getDiningFeesByType(String type) {
-        // Convert DTO string type to enum
-        DiningFee.ResidencyType enumType = DiningFee.ResidencyType.fromString(type);
-        return diningFeeRepo.findByType(enumType);
+        // Type is always RESIDENT for dining fees, ignore the parameter
+        return diningFeeRepo.findByType(DiningFee.ResidencyType.RESIDENT);
     }
 
     public List<DiningFee> getDiningFeesByYear(Integer year) {
@@ -150,15 +198,13 @@ public class DiningFeeService {
     }
 
     public List<DiningFee> getDiningFeesByTypeAndYear(String type, Integer year) {
-        // Convert DTO string type to enum
-        DiningFee.ResidencyType enumType = DiningFee.ResidencyType.fromString(type);
-        return diningFeeRepo.findByTypeAndYear(enumType, year);
+        // Type is always RESIDENT for dining fees, ignore the type parameter
+        return diningFeeRepo.findByTypeAndYear(DiningFee.ResidencyType.RESIDENT, year);
     }
 
     public List<DiningFee> getActiveDiningFeesByType(String type) {
-        // Convert DTO string type to enum
-        DiningFee.ResidencyType enumType = DiningFee.ResidencyType.fromString(type);
-        return diningFeeRepo.findActiveByType(enumType, LocalDate.now());
+        // Type is always RESIDENT for dining fees, ignore the type parameter
+        return diningFeeRepo.findActiveByType(DiningFee.ResidencyType.RESIDENT, LocalDate.now());
     }
 
     public List<DiningFee> getAllActiveDiningFees() {

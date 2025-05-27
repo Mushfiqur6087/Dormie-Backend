@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,70 +19,56 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.HMS.hms.Payment.Utility.ParameterBuilder;
-import com.HMS.hms.Payment.Utility.Util;
-import com.HMS.hms.Payment.parametermappings.SSLCommerzInitResponse;
-import com.HMS.hms.Service.SSLCommerzValidationService;
-
+import com.HMS.hms.Security.UserDetailsImpl;
+import com.HMS.hms.Service.PaymentService;
 @RestController
 @RequestMapping("/payment")
 public class PaymentController {
     
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+    
     @Autowired
-    private SSLCommerzValidationService validationService;
+    private PaymentService paymentService;
 
     @PostMapping("/initiate")
     public ResponseEntity<?> initiatePayment() throws IOException, UnsupportedEncodingException {
-        Map<String, String> params = ParameterBuilder.constructRequestParameters();
-        String paramString = ParameterBuilder.getParamsString(params, true);
-        String sslcommerzUrl = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php";
-        String response = Util.postToUrl(sslcommerzUrl, paramString);
-
-        SSLCommerzInitResponse initResponse = Util.extractInitResponse(response);
-
-        if ("SUCCESS".equalsIgnoreCase(initResponse.getStatus())) {
-//            return ResponseEntity.status(HttpStatus.FOUND)
-//                    .location(URI.create(initResponse.getGatewayPageURL()))
-//                    .build();
-            return ResponseEntity.ok(Map.of("redirect_url", initResponse.getGatewayPageURL()));
+        // Get authenticated user information from SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.error("User is not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("User is not authenticated");
+        }
+        
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+        String email = userDetails.getEmail();
+        String username = userDetails.getUsername();
+        
+        // Delegate business logic to service layer
+        PaymentService.PaymentInitiationResult result = paymentService.initiatePayment(userId, email, username);
+        
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(Map.of(
+                "redirect_url", result.getRedirectUrl(),
+                "transaction_id", result.getTransactionId()
+            ));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(initResponse.getFailedreason());
+                    .body(Map.of(
+                        "error", "Payment initiation failed",
+                        "message", result.getErrorMessage()
+                    ));
         }
     }
 
     @PostMapping("/ssl-success-page")
     public ResponseEntity<?> handleSuccessPost(@RequestParam Map<String, String> params) {
-        logger.info("Payment success callback received with params: {}", params);
+        PaymentService.PaymentCallbackResult result = paymentService.processSuccessCallback(params);
         
-        // Validate callback parameters
-        if (!validationService.validateCallbackParameters(params)) {
-            logger.warn("Invalid callback parameters received");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid callback parameters");
-        }
-        
-        String tranId = params.getOrDefault("tran_id", "unknown");
-        String valId = params.getOrDefault("val_id", "unknown");
-        String amount = params.getOrDefault("amount", "0");
-        String status = params.getOrDefault("status", "unknown");
-        
-        // Additional validation with SSLCommerz server
-        if ("VALID".equals(status)) {
-            if (!validationService.validateTransaction(valId, tranId, amount)) {
-                logger.warn("Transaction validation failed for val_id: {}, tran_id: {}", valId, tranId);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Transaction validation failed");
-            }
-            logger.info("Payment validation successful for transaction: {}", tranId);
-        }
-
-        // Redirect to static page with query params
-        String redirectUrl = "/payment-success.html?tran_id=" + tranId + "&val_id=" + valId + "&status=" + status;
-
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(redirectUrl))
+                .location(URI.create(result.getRedirectUrl()))
                 .build();
     }
 
@@ -95,33 +83,15 @@ public class PaymentController {
     @PostMapping("/ssl-fail-page")
     @ResponseBody
     public String paymentFailPost(@RequestParam Map<String, String> allParams) {
-        logger.info("Payment failed callback received: {}", allParams);
-        
-        // Validate callback parameters
-        if (!validationService.validateCallbackParameters(allParams)) {
-            logger.warn("Invalid callback parameters received for failed payment");
-            return "Invalid callback parameters";
-        }
-        
-        return "Payment Failed<br><br>" + allParams.entrySet().stream()
-                .map(e -> e.getKey() + ": " + e.getValue())
-                .reduce("", (a, b) -> a + "<br>" + b);
+        PaymentService.PaymentCallbackResult result = paymentService.processFailureCallback(allParams);
+        return result.getMessage();
     }
 
     //Payment Cancelled
     @PostMapping("/ssl-cancel-page")
     @ResponseBody
     public String paymentCancelPost(@RequestParam Map<String, String> allParams) {
-        logger.info("Payment cancelled callback received: {}", allParams);
-        
-        // Validate callback parameters
-        if (!validationService.validateCallbackParameters(allParams)) {
-            logger.warn("Invalid callback parameters received for cancelled payment");
-            return "Invalid callback parameters";
-        }
-        
-        return "Payment Cancelled<br><br>" + allParams.entrySet().stream()
-                .map(e -> e.getKey() + ": " + e.getValue())
-                .reduce("", (a, b) -> a + "<br>" + b);
+        PaymentService.PaymentCallbackResult result = paymentService.processCancellationCallback(allParams);
+        return result.getMessage();
     }
 }

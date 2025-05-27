@@ -1,6 +1,7 @@
 package com.HMS.hms.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,13 +11,23 @@ import org.springframework.stereotype.Service;
 
 import com.HMS.hms.DTO.HallFeeDTO;
 import com.HMS.hms.Repo.HallFeeRepo;
+import com.HMS.hms.Repo.StudentHallFeesRepo;
+import com.HMS.hms.Repo.UsersRepo;
 import com.HMS.hms.Tables.HallFee;
+import com.HMS.hms.Tables.StudentHallFees;
+import com.HMS.hms.Tables.Users;
 
 @Service
 public class HallFeeService {
 
     @Autowired
     private HallFeeRepo hallFeeRepo;
+    
+    @Autowired
+    private UsersRepo usersRepo;
+    
+    @Autowired
+    private StudentHallFeesRepo studentHallFeesRepo;
 
     // Create a new hall fee
     public HallFee createHallFee(String type, Integer year, BigDecimal fee) {
@@ -163,7 +174,60 @@ public class HallFeeService {
     public HallFeeDTO createHallFeeFromDTO(HallFeeDTO createDTO) {
         HallFee hallFee = convertFromCreateDTO(createDTO);
         HallFee savedFee = hallFeeRepo.save(hallFee);
+        
+        // Automatically create StudentHallFees entries for all students
+        createStudentHallFeesForAllStudents(savedFee);
+        
         return convertToDTO(savedFee);
+    }
+    
+    /**
+     * Creates StudentHallFees entries for all students and hall managers when a new hall fee is created.
+     * Both students and hall managers are automatically assigned fees that match the hall fee type.
+     */
+    private void createStudentHallFeesForAllStudents(HallFee hallFee) {
+        // Get all users with STUDENT and HALL_MANAGER roles
+        List<Users> students = usersRepo.findByRole("STUDENT");
+        List<Users> hallManagers = usersRepo.findByRole("HALL_MANAGER");
+        
+        // Combine both lists
+        List<Users> allUsers = new ArrayList<>();
+        allUsers.addAll(students);
+        allUsers.addAll(hallManagers);
+        
+        // Determine student type based on hall fee type
+        String studentType = mapFeeTypeToStudentType(hallFee.getTypeAsString());
+        
+        for (Users user : allUsers) {
+            // Create hall fee entry for the user (student or hall manager)
+            StudentHallFees studentFee = new StudentHallFees(
+                user.getUserId(),
+                user.getUserId(), // Using userId as studentId since we don't have separate student IDs
+                studentType,
+                hallFee.getYear(),
+                StudentHallFees.PaymentStatus.UNPAID
+            );
+            
+            studentHallFeesRepo.save(studentFee);
+        }
+    }
+    
+    /**
+     * Maps hall fee type to student type for fee assignment.
+     * @param feeType The hall fee type (ATTACHED/RESIDENT)
+     * @return The corresponding student type
+     */
+    private String mapFeeTypeToStudentType(String feeType) {
+        if (feeType == null) {
+            return "Attached"; // Default to Attached
+        }
+        
+        String normalizedFeeType = feeType.toLowerCase();
+        return switch (normalizedFeeType) {
+            case "attached" -> "Attached";
+            case "resident" -> "Resident";
+            default -> "Attached"; // Default to Attached
+        };
     }
 
     public List<HallFeeDTO> getAllHallFeesAsDTO() {
