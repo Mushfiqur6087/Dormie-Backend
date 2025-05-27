@@ -1,5 +1,15 @@
 package com.HMS.hms.Security;
 
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,15 +17,6 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class SSLCommerzSecurityFilter implements Filter {
@@ -89,6 +90,12 @@ public class SSLCommerzSecurityFilter implements Filter {
     }
     
     private boolean isValidSourceIP(HttpServletRequest request) {
+        // If IP validation is disabled via configuration
+        if (disableIpValidation) {
+            logger.debug("IP validation is disabled via configuration");
+            return true;
+        }
+        
         String clientIP = getClientIP(request);
         
         // In sandbox/testing environment, be more lenient with IP validation
@@ -175,7 +182,7 @@ public class SSLCommerzSecurityFilter implements Filter {
             
             return isValid;
             
-        } catch (Exception e) {
+        } catch (SecurityException | IllegalArgumentException e) {
             logger.error("Error validating SSLCommerz signature", e);
             return false;
         }
@@ -190,7 +197,7 @@ public class SSLCommerzSecurityFilter implements Filter {
                 sb.append(String.format("%02x", b));
             }
             return sb.toString();
-        } catch (Exception e) {
+        } catch (java.security.NoSuchAlgorithmException e) {
             logger.error("Error generating MD5 hash", e);
             return "";
         }

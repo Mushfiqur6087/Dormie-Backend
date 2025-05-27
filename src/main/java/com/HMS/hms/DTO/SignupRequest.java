@@ -19,6 +19,8 @@ public class SignupRequest {
     private String password;
 
     private String role;
+    
+    private Long studentId; // For student role only
 
     public String getUsername() {
         return username;
@@ -50,5 +52,13 @@ public class SignupRequest {
 
     public void setRole(String role) {
         this.role = role;
+    }
+    
+    public Long getStudentId() {
+        return studentId;
+    }
+    
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 }

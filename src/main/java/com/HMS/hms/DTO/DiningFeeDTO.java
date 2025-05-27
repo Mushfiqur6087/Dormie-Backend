@@ -16,8 +16,8 @@ public class DiningFeeDTO {
     private Long id;
     
     @NotBlank(message = "Type is required")
-    @Pattern(regexp = "^(ATTACHED|RESIDENT)$", message = "Type must be either 'ATTACHED' or 'RESIDENT'")
-    private String type; // "ATTACHED" or "RESIDENT"
+    @Pattern(regexp = "^(resident)$", message = "Type must be 'resident' (dining fees are only for resident students)")
+    private String type = "resident"; // Always "resident" for dining fees
     
     @NotNull(message = "Year is required")
     @Min(value = 2020, message = "Year must be 2020 or later")
@@ -38,19 +38,19 @@ public class DiningFeeDTO {
     // Default constructor
     public DiningFeeDTO() {}
 
-    // Constructor without ID (for creation)
+    // Constructor without ID (for creation) - type is always resident
     public DiningFeeDTO(String type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        this.type = type;
+        this.type = "resident"; // Always resident for dining fees
         this.year = year;
         this.startDate = startDate;
         this.endDate = endDate;
         this.fee = fee;
     }
 
-    // Constructor with ID (for responses)
+    // Constructor with ID (for responses) - type is always resident
     public DiningFeeDTO(Long id, String type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
         this.id = id;
-        this.type = type;
+        this.type = "resident"; // Always resident for dining fees
         this.year = year;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -71,7 +71,7 @@ public class DiningFeeDTO {
     }
 
     public void setType(String type) {
-        this.type = type;
+        this.type = "resident"; // Always resident for dining fees
     }
 
     public Integer getYear() {

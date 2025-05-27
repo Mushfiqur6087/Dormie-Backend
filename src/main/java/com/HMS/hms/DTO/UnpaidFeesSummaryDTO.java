@@ -6,7 +6,6 @@ public class UnpaidFeesSummaryDTO {
     private BigDecimal totalUnpaidAmount;
     private String email;
     private String username;
-    private String feeType; // "HALL" or "DINING"
     private String feeDescription; // "Hall Fees" or "Dining Fees"
 
     // Default constructor
@@ -19,20 +18,11 @@ public class UnpaidFeesSummaryDTO {
         this.username = username;
     }
 
-    // Constructor with fee type only
-    public UnpaidFeesSummaryDTO(BigDecimal totalUnpaidAmount, String email, String username, String feeType) {
+    // Constructor with fee description
+    public UnpaidFeesSummaryDTO(BigDecimal totalUnpaidAmount, String email, String username, String feeDescription) {
         this.totalUnpaidAmount = totalUnpaidAmount;
         this.email = email;
         this.username = username;
-        this.feeType = feeType;
-    }
-
-    // Constructor with fee type and description
-    public UnpaidFeesSummaryDTO(BigDecimal totalUnpaidAmount, String email, String username, String feeType, String feeDescription) {
-        this.totalUnpaidAmount = totalUnpaidAmount;
-        this.email = email;
-        this.username = username;
-        this.feeType = feeType;
         this.feeDescription = feeDescription;
     }
 
@@ -61,14 +51,6 @@ public class UnpaidFeesSummaryDTO {
         this.username = username;
     }
 
-    public String getFeeType() {
-        return feeType;
-    }
-
-    public void setFeeType(String feeType) {
-        this.feeType = feeType;
-    }
-
     public String getFeeDescription() {
         return feeDescription;
     }
@@ -83,7 +65,6 @@ public class UnpaidFeesSummaryDTO {
                 "totalUnpaidAmount=" + totalUnpaidAmount +
                 ", email='" + email + '\'' +
                 ", username='" + username + '\'' +
-                ", feeType='" + feeType + '\'' +
                 ", feeDescription='" + feeDescription + '\'' +
                 '}';
     }

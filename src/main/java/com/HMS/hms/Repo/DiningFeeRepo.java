@@ -1,18 +1,19 @@
 package com.HMS.hms.Repo;
 
-import com.HMS.hms.Tables.DiningFee;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.HMS.hms.Tables.DiningFee;
 
 @Repository
 public interface DiningFeeRepo extends JpaRepository<DiningFee, Long> {
 
-    // Find dining fees by type (attached/resident)
+    // Find dining fees by type (resident only - attached students don't get dining fees)
     List<DiningFee> findByType(String type);
 
     // Find dining fees by enum type

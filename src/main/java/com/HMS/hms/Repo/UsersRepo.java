@@ -1,9 +1,11 @@
 package com.HMS.hms.Repo;
 
-import com.HMS.hms.Tables.Users;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.HMS.hms.Tables.Users;
 
 public interface UsersRepo extends JpaRepository<Users, Long> {
     Optional<Users> findByUsername(String username);
@@ -11,4 +13,6 @@ public interface UsersRepo extends JpaRepository<Users, Long> {
     Optional<Users> findByEmail(String email);
 
     Optional<Users> findByUserId(Long userId);
+    
+    List<Users> findByRole(String role);
 }

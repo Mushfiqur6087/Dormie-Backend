@@ -1,16 +1,23 @@
 package com.HMS.hms.Tables;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "dining_fee")
 public class DiningFee {
 
-    // Enum for residency types
+    // Enum for residency types - dining fees are only for residents
     public enum ResidencyType {
-        ATTACHED("attached"),
         RESIDENT("resident");
 
         private final String value;
@@ -24,12 +31,10 @@ public class DiningFee {
         }
 
         public static ResidencyType fromString(String value) {
-            for (ResidencyType type : ResidencyType.values()) {
-                if (type.value.equalsIgnoreCase(value)) {
-                    return type;
-                }
+            if ("resident".equalsIgnoreCase(value)) {
+                return RESIDENT;
             }
-            throw new IllegalArgumentException("Invalid residency type: " + value + ". Must be 'attached' or 'resident'.");
+            throw new IllegalArgumentException("Invalid residency type: " + value + ". Dining fees are only for 'resident' students.");
         }
 
         @Override
@@ -44,7 +49,7 @@ public class DiningFee {
 
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private ResidencyType type; // attached/resident
+    private ResidencyType type = ResidencyType.RESIDENT; // Always resident for dining fees
 
     @Column(name = "year", nullable = false)
     private Integer year;
@@ -61,18 +66,18 @@ public class DiningFee {
     // Default constructor
     public DiningFee() {}
 
-    // Constructor with parameters
+    // Constructor with parameters - type is always RESIDENT for dining fees
     public DiningFee(ResidencyType type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        this.type = type;
+        this.type = ResidencyType.RESIDENT; // Always resident for dining fees
         this.year = year;
         this.startDate = startDate;
         this.endDate = endDate;
         this.fee = fee;
     }
 
-    // Constructor with string type (for convenience)
+    // Constructor with string type (for convenience) - type is always RESIDENT for dining fees
     public DiningFee(String type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        this.type = ResidencyType.fromString(type);
+        this.type = ResidencyType.RESIDENT; // Always resident for dining fees
         this.year = year;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -93,11 +98,11 @@ public class DiningFee {
     }
 
     public void setType(ResidencyType type) {
-        this.type = type;
+        this.type = ResidencyType.RESIDENT; // Always resident for dining fees
     }
 
     public void setType(String type) {
-        this.type = ResidencyType.fromString(type);
+        this.type = ResidencyType.RESIDENT; // Always resident for dining fees
     }
 
     public String getTypeAsString() {

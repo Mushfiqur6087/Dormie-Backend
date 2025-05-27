@@ -135,7 +135,7 @@ public interface StudentHallFeesRepo extends JpaRepository<StudentHallFees, Long
     List<StudentHallFees> findByUserIdAndYear(Long userId, Integer year);
 
     // Get unpaid fees summary for a user (total amount, email, username)
-    @Query("SELECT new com.HMS.hms.DTO.UnpaidFeesSummaryDTO(COALESCE(SUM(hf.fee), 0), u.email, u.username, 'HALL', 'Hall Fees') " +
+    @Query("SELECT new com.HMS.hms.DTO.UnpaidFeesSummaryDTO(COALESCE(SUM(hf.fee), 0), u.email, u.username, 'Hall Fees') " +
            "FROM StudentHallFees shf " +
            "JOIN Users u ON u.userId = shf.userId " +
            "JOIN HallFee hf ON hf.type = CASE " +

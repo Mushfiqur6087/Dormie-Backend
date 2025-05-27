@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,6 @@ import com.HMS.hms.DTO.SignupRequest;
 import com.HMS.hms.Security.JwtUtils;
 import com.HMS.hms.Security.UserDetailsImpl;
 import com.HMS.hms.Service.UserService;
-import com.HMS.hms.Tables.Users;
 import com.HMS.hms.enums.UserRole;
 
 import jakarta.validation.Valid;
@@ -40,11 +40,10 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
     JwtUtils jwtUtils;
 
+
+    //*testing done */
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
@@ -66,34 +65,51 @@ public class AuthController {
                 roles));
     }
 
-    @PostMapping("/signup")
+    /**
+     * Admin-only endpoint for creating new users.
+     * Requires authentication via JWT token with ADMIN role.
+     * Secured with both @PreAuthorize annotation and manual role checking.
+     */
+    //*testing done */
+    @PostMapping("admin/signup")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+        
+        // Additional check to ensure current user is admin
+        Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+        if (currentAuth == null || !currentAuth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Error: Authentication required!"));
         }
-
-        if (userService.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+        
+        // Check if current user has ADMIN role
+        boolean isAdmin = currentAuth.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("Error: Only administrators can create new users!"));
         }
-
-        // Create new user's account
-        Users user = new Users();
-        user.setUsername(signUpRequest.getUsername());
-        user.setEmail(signUpRequest.getEmail());
-        user.setPassword(encoder.encode(signUpRequest.getPassword()));
 
         String strRole = signUpRequest.getRole();
         
         // Use the UserRole enum for consistent role handling
         UserRole userRole = UserRole.fromString(strRole);
-        user.setRole(userRole.getValue());
-
-        userService.saveUser(user);
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        
+        // Check if admin is trying to create a student
+        if (userRole != UserRole.STUDENT) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Admin can only create STUDENT users!"));
+        }
+        
+        try {
+            // Create student user using service layer
+            userService.createStudentUser(signUpRequest);
+            return ResponseEntity.ok(new MessageResponse("Student user registered successfully!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
     }
-
-
 }
 

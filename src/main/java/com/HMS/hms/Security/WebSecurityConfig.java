@@ -61,9 +61,9 @@ public class WebSecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/signin").permitAll()  // Allow public login
+                .requestMatchers("/api/auth/admin/signup").hasRole("ADMIN")  // Require ADMIN role for signup
                 .requestMatchers("/api/test/**").permitAll()
-                .requestMatchers("/payment/initiate").authenticated()        // Require auth for payment initiation
                 .requestMatchers("/payment/ssl-success-page").permitAll()   // Allow callbacks
                 .requestMatchers("/payment/ssl-fail-page").permitAll()      // Allow callbacks
                 .requestMatchers("/payment/ssl-cancel-page").permitAll()    // Allow callbacks

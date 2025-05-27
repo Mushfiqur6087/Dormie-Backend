@@ -106,38 +106,32 @@ public interface StudentDiningFeesRepo extends JpaRepository<StudentDiningFees, 
                                                      @Param("status") String status);
 
     // Calculate total unpaid fees for a user by joining with DiningFee table
+    // Note: Only resident students have dining fees, attached students are skipped
     @Query("SELECT COALESCE(SUM(df.fee), 0) FROM StudentDiningFees sdf " +
-           "JOIN DiningFee df ON df.type = CASE " +
-           "    WHEN LOWER(sdf.studentType) = 'attached' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
-           "    WHEN LOWER(sdf.studentType) = 'resident' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
-           "    ELSE com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
-           "END AND df.year = sdf.year " +
+           "JOIN DiningFee df ON df.type = com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
+           "AND df.year = sdf.year " +
            "AND sdf.startDate <= df.endDate AND sdf.endDate >= df.startDate " +
-           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID'")
+           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID' AND LOWER(sdf.studentType) = 'resident'")
     BigDecimal getTotalUnpaidFeesByUserId(@Param("userId") Long userId);
 
     // Get unpaid fees with their amounts for a user
+    // Note: Only resident students have dining fees, attached students are skipped
     @Query("SELECT sdf, df.fee FROM StudentDiningFees sdf " +
-           "JOIN DiningFee df ON df.type = CASE " +
-           "    WHEN LOWER(sdf.studentType) = 'attached' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
-           "    WHEN LOWER(sdf.studentType) = 'resident' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
-           "    ELSE com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
-           "END AND df.year = sdf.year " +
+           "JOIN DiningFee df ON df.type = com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
+           "AND df.year = sdf.year " +
            "AND sdf.startDate <= df.endDate AND sdf.endDate >= df.startDate " +
-           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID'")
+           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID' AND LOWER(sdf.studentType) = 'resident'")
     List<Object[]> getUnpaidFeesWithAmountByUserId(@Param("userId") Long userId);
 
     // Get unpaid fees summary for a user (total amount, email, username)
-    @Query("SELECT new com.HMS.hms.DTO.UnpaidFeesSummaryDTO(COALESCE(SUM(df.fee), 0), u.email, u.username, 'DINING', 'Dining Fees') " +
+    // Note: Only resident students have dining fees, attached students are skipped
+    @Query("SELECT new com.HMS.hms.DTO.UnpaidFeesSummaryDTO(COALESCE(SUM(df.fee), 0), u.email, u.username, 'Dining Fees') " +
            "FROM StudentDiningFees sdf " +
            "JOIN Users u ON u.userId = sdf.userId " +
-           "JOIN DiningFee df ON df.type = CASE " +
-           "    WHEN LOWER(sdf.studentType) = 'attached' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
-           "    WHEN LOWER(sdf.studentType) = 'resident' THEN com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
-           "    ELSE com.HMS.hms.Tables.DiningFee$ResidencyType.ATTACHED " +
-           "END AND df.year = sdf.year " +
+           "JOIN DiningFee df ON df.type = com.HMS.hms.Tables.DiningFee$ResidencyType.RESIDENT " +
+           "AND df.year = sdf.year " +
            "AND sdf.startDate <= df.endDate AND sdf.endDate >= df.startDate " +
-           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID' " +
+           "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID' AND LOWER(sdf.studentType) = 'resident' " +
            "GROUP BY u.email, u.username")
     UnpaidFeesSummaryDTO getUnpaidFeesSummaryByUserId(@Param("userId") Long userId);
 }
