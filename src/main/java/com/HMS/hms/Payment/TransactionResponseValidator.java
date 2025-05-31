@@ -2,11 +2,14 @@ package com.HMS.hms.Payment;
 
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 /**
  * This class handles the Response parameters redirected from payment success page.
  * Validates those parameters fetched from payment page response and returns true for successful transaction
  * and false otherwise.
  */
+@Component
 public class TransactionResponseValidator {
     /**
      *
