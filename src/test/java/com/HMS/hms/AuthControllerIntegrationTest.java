@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.HMS.hms.DTO.JwtResponse;
 import com.HMS.hms.DTO.LoginRequest;
@@ -37,6 +38,7 @@ import com.HMS.hms.DTO.SignupRequest;
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Transactional
 class AuthControllerIntegrationTest {
 
     @LocalServerPort

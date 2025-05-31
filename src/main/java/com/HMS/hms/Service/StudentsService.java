@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.HMS.hms.DTO.StudentDTO;
+import com.HMS.hms.DTO.StudentUpdateRequest;
 import com.HMS.hms.Repo.StudentsRepo;
 import com.HMS.hms.Tables.Students;
 
@@ -159,5 +160,40 @@ public class StudentsService {
         return studentsRepo.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * Update student information
+     * @param student the student entity to update
+     * @param updateRequest the update request containing new information
+     * @return the updated student entity
+     */
+    public Students updateStudentInformation(Students student, StudentUpdateRequest updateRequest) {
+        // Update only the fields that are provided (not null)
+        if (updateRequest.getDepartment() != null) {
+            student.setDepartment(updateRequest.getDepartment());
+        }
+        
+        if (updateRequest.getBatch() != null) {
+            student.setBatch(updateRequest.getBatch());
+        }
+        
+        if (updateRequest.getContactNo() != null) {
+            student.setContactNo(updateRequest.getContactNo());
+        }
+        
+        if (updateRequest.getPresentAddress() != null) {
+            student.setPresentAddress(updateRequest.getPresentAddress());
+        }
+        
+        if (updateRequest.getPermanentAddress() != null) {
+            student.setPermanentAddress(updateRequest.getPermanentAddress());
+        }
+        
+        if (updateRequest.getResidencyStatus() != null) {
+            student.setResidencyStatus(updateRequest.getResidencyStatus());
+        }
+        
+        return studentsRepo.save(student);
     }
 }
