@@ -1,4 +1,4 @@
-package com.HMS.hms.studentCreation;
+package com.HMS.hms.StudentCreateUpdate;
 
 import java.util.Optional;
 

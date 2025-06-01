@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.HMS.hms.DTO.StudentDTO;
 import com.HMS.hms.DTO.StudentUpdateRequest;
+import com.HMS.hms.Security.UserDetailsImpl;
 import com.HMS.hms.Service.StudentsService;
 import com.HMS.hms.Service.UserService;
 import com.HMS.hms.Tables.Students;
@@ -54,7 +56,18 @@ public class StudentsController {
     public ResponseEntity<?> updateStudentInformation(@Valid @RequestBody StudentUpdateRequest updateRequest) {
         try {
             // Get the email from the security context (JWT token)
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = null;
+            
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                email = userDetails.getEmail();
+            }
+            
+            // Add debugging information
+            System.out.println("DEBUG: Extracted email from JWT: " + email);
+            System.out.println("DEBUG: Authentication object: " + authentication);
+            System.out.println("DEBUG: Principal: " + (authentication != null ? authentication.getPrincipal() : "null"));
             
             if (email == null || email.equals("anonymousUser")) {
                 return ResponseEntity.status(401).body("Authentication required");
@@ -63,10 +76,12 @@ public class StudentsController {
             // Find the user by email
             Optional<Users> userOpt = userService.findByEmail(email);
             if (userOpt.isEmpty()) {
-                return ResponseEntity.status(404).body("User not found");
+                System.out.println("DEBUG: User not found with email: " + email);
+                return ResponseEntity.status(404).body("User not found with email: " + email);
             }
             
             Users user = userOpt.get();
+            System.out.println("DEBUG: Found user: " + user.getUsername() + " with role: " + user.getRole());
             
             // Check if user is a student
             if (!"STUDENT".equals(user.getRole())) {
