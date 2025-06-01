@@ -16,12 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.HMS.hms.DTO.JwtResponse;
-import com.HMS.hms.DTO.LoginRequest;
-import com.HMS.hms.DTO.MessageResponse;
-import com.HMS.hms.DTO.SignupRequest;
 import com.HMS.hms.DTO.StudentDTO;
 import com.HMS.hms.DTO.StudentUpdateRequest;
+import com.HMS.hms.utility.TestUtility;
 
 /**
  * Integration test for student update functionality.
@@ -40,8 +37,7 @@ class StudentUpdateTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private String authBaseUrl;
-    private String studentsBaseUrl;
+    private TestUtility testUtility;
 
     /**
      * Main test that verifies the complete student update workflow.
@@ -50,98 +46,21 @@ class StudentUpdateTest {
      */
     @Test
     void testStudentCanUpdateOwnInformation() {
-        // Setup URLs
-        setupUrls();
+        // Initialize test utility
+        testUtility = new TestUtility(restTemplate, port);
         
-        // Step 1: Login as admin and get JWT token
-        String adminJwtToken = loginAsAdmin();
+        // Step 1: Create a student via admin (this handles admin login and student creation)
+        TestUtility.StudentCredentials studentCredentials = testUtility.createStudentWithCredentials();
         
-        // Step 2: Admin creates a new student
-        SignupRequest studentRequest = createStudentSignupRequest();
-        createStudent(adminJwtToken, studentRequest);
+        // Step 2: Login as the newly created student
+        String studentJwtToken = testUtility.loginAsStudent(
+            studentCredentials.getEmail(), 
+            studentCredentials.getPassword()
+        );
         
-        // Step 3: Login as the newly created student
-        String studentJwtToken = loginAsStudent(studentRequest.getEmail(), studentRequest.getPassword());
-        
-        // Step 4: Student updates their own information
+        // Step 3: Student updates their own information
         StudentUpdateRequest updateRequest = createStudentUpdateRequest();
         updateStudentInformation(studentJwtToken, updateRequest);
-    }
-
-    /**
-     * Sets up the base URLs for API endpoints.
-     */
-    private void setupUrls() {
-        authBaseUrl = "http://localhost:" + port + "/api/auth";
-        studentsBaseUrl = "http://localhost:" + port + "/api/students";
-    }
-
-    /**
-     * Authenticates as admin and returns the JWT token.
-     */
-    private String loginAsAdmin() {
-        LoginRequest adminLogin = new LoginRequest();
-        adminLogin.setEmail("admin@dormie.com");
-        adminLogin.setPassword("Admin123!");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<LoginRequest> request = new HttpEntity<>(adminLogin, headers);
-
-        ResponseEntity<JwtResponse> response = restTemplate.exchange(
-            authBaseUrl + "/signin", HttpMethod.POST, request, JwtResponse.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Admin login should be successful");
-        
-        JwtResponse jwtResponse = response.getBody();
-        assertNotNull(jwtResponse, "JWT response should not be null");
-        assertNotNull(jwtResponse.getAccessToken(), "JWT token should not be null");
-        
-        return jwtResponse.getAccessToken();
-    }
-
-    /**
-     * Authenticates as a student and returns the JWT token.
-     */
-    private String loginAsStudent(String email, String password) {
-        LoginRequest studentLogin = new LoginRequest();
-        studentLogin.setEmail(email);
-        studentLogin.setPassword(password);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<LoginRequest> request = new HttpEntity<>(studentLogin, headers);
-
-        ResponseEntity<JwtResponse> response = restTemplate.exchange(
-            authBaseUrl + "/signin", HttpMethod.POST, request, JwtResponse.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Student login should be successful");
-        
-        JwtResponse jwtResponse = response.getBody();
-        assertNotNull(jwtResponse, "JWT response should not be null");
-        assertNotNull(jwtResponse.getAccessToken(), "JWT token should not be null");
-        
-        return jwtResponse.getAccessToken();
-    }
-
-    /**
-     * Creates a student via admin signup endpoint.
-     */
-    private void createStudent(String adminJwtToken, SignupRequest studentRequest) {
-        HttpHeaders authHeaders = new HttpHeaders();
-        authHeaders.setContentType(MediaType.APPLICATION_JSON);
-        authHeaders.setBearerAuth(adminJwtToken);
-        HttpEntity<SignupRequest> signupRequest = new HttpEntity<>(studentRequest, authHeaders);
-
-        ResponseEntity<MessageResponse> signupResponse = restTemplate.exchange(
-            authBaseUrl + "/admin/signup", HttpMethod.POST, signupRequest, MessageResponse.class);
-
-        assertEquals(HttpStatus.OK, signupResponse.getStatusCode(), "Student creation should be successful");
-        
-        MessageResponse signupResponseBody = signupResponse.getBody();
-        assertNotNull(signupResponseBody, "Signup response should not be null");
-        assertEquals("Student user registered successfully!", signupResponseBody.getMessage(),
-            "Should receive success message");
     }
 
     /**
@@ -154,7 +73,7 @@ class StudentUpdateTest {
         HttpEntity<StudentUpdateRequest> request = new HttpEntity<>(updateRequest, authHeaders);
 
         ResponseEntity<StudentDTO> response = restTemplate.exchange(
-            studentsBaseUrl + "/update", HttpMethod.PUT, request, StudentDTO.class);
+            testUtility.getStudentsBaseUrl() + "/update", HttpMethod.PUT, request, StudentDTO.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), "Student information update should be successful");
         
@@ -174,19 +93,6 @@ class StudentUpdateTest {
             "Permanent address should be updated");
         assertEquals(updateRequest.getResidencyStatus(), updatedStudent.getResidencyStatus(), 
             "Residency status should be updated");
-    }
-
-    /**
-     * Creates a test SignupRequest for student creation.
-     */
-    private SignupRequest createStudentSignupRequest() {
-        SignupRequest request = new SignupRequest();
-        request.setUsername("Test Student");
-        request.setEmail("teststudent@dormie.com");
-        request.setPassword("TestPassword123!");
-        request.setRole("STUDENT");
-        request.setStudentId(20240999L);
-        return request;
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.HMS.hms;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -8,18 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.HMS.hms.DTO.JwtResponse;
-import com.HMS.hms.DTO.LoginRequest;
 import com.HMS.hms.Service.UserService;
+import com.HMS.hms.utility.TestUtility;
 
 /**
  * Tests AdminBootstrapConfig functionality.
@@ -43,6 +35,8 @@ class AdminBootstrapConfigTest {
     @Autowired
     private UserService userService;
 
+    private TestUtility testUtility;
+
     /**
      * Test that verifies admin user bootstrap and successful authentication.
      * 
@@ -54,32 +48,16 @@ class AdminBootstrapConfigTest {
      */
     @Test
     void testAdminBootstrapAndLogin() throws Exception {
+        // Initialize test utility
+        testUtility = new TestUtility(restTemplate, port);
+        
         // Verify that admin user was created by AdminBootstrapConfig
         assertTrue(userService.adminExists(), "Admin user should exist after bootstrap");
         
-        // Test admin login with default credentials
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("admin@dormie.com");
-        loginRequest.setPassword("Admin123!");
-
-        // Set up headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<LoginRequest> request = new HttpEntity<>(loginRequest, headers);
-
-        // Perform login request
-        String url = "http://localhost:" + port + "/api/auth/signin";
-        ResponseEntity<JwtResponse> response = restTemplate.exchange(
-            url, HttpMethod.POST, request, JwtResponse.class);
-
-        // Verify successful login
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        // Test admin login using TestUtility - this validates both bootstrap and authentication
+        String adminJwtToken = testUtility.loginAsAdmin();
         
-        JwtResponse jwtResponse = response.getBody();
-        assertNotNull(jwtResponse);
-        assertNotNull(jwtResponse.getAccessToken());
-        assertEquals("admin@dormie.com", jwtResponse.getEmail());
-        assertTrue(jwtResponse.getRoles().contains("ROLE_ADMIN"));
+        // Verify successful login (loginAsAdmin method already performs assertions)
+        assertNotNull(adminJwtToken, "Admin JWT token should not be null");
     }
 }
