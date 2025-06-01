@@ -51,7 +51,7 @@ public class DiningFee {
     @Enumerated(EnumType.STRING)
     private ResidencyType type = ResidencyType.RESIDENT; // Always resident for dining fees
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "`year`", nullable = false)
     private Integer year;
 
     @Column(name = "start_date", nullable = false)

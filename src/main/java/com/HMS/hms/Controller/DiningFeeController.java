@@ -77,18 +77,6 @@ public class DiningFeeController {
         }
     }
 
-    // Get dining fees by type and year
-    @GetMapping("/type/{type}/year/{year}")
-    public ResponseEntity<List<DiningFeeDTO>> getDiningFeesByTypeAndYear(@PathVariable String type, @PathVariable Integer year) {
-        try {
-            List<DiningFeeDTO> diningFees = diningFeeService.getDiningFeesByTypeAndYearAsDTO(type, year);
-            return new ResponseEntity<>(diningFees, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
 
     // Get all currently active dining fees

@@ -1,7 +1,15 @@
 package com.HMS.hms.Tables;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "hall_fee")
@@ -45,7 +53,7 @@ public class HallFee {
     @Enumerated(EnumType.STRING)
     private ResidencyType type; // attached/resident
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "`year`", nullable = false)
     private Integer year;
 
     @Column(name = "fee", nullable = false, precision = 10, scale = 2)
