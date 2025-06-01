@@ -183,7 +183,8 @@ echo "📝 Step 10: Admin Getting All Student Hall Fees (should be auto-created)
 ALL_STUDENT_HALL_FEES_RESPONSE=$(curl -s -X GET "${BASE_URL}/api/student-hall-fees" \
   -H "Authorization: Bearer $ADMIN_TOKEN")
 
-echo "All Student Hall Fees: $ALL_STUDENT_HALL_FEES_RESPONSE"
+echo "All Student Hall Fees:"
+echo "$ALL_STUDENT_HALL_FEES_RESPONSE" | jq '.'
 echo ""
 
 echo "🎉 Hall Fee Testing Workflow Completed!"

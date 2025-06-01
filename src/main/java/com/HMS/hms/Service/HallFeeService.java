@@ -198,7 +198,7 @@ public class HallFeeService {
         for (Students student : matchingStudents) {
             // Create hall fee entry only for students with matching residency status
             StudentHallFees studentFee = new StudentHallFees(
-                hallFee.getId(),
+                student.getUserId(),
                 student.getStudentId(),
                 studentType,
                 hallFee.getYear(),
