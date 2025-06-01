@@ -25,8 +25,6 @@ public class StudentHallFeeDTO {
     @NotBlank(message = "Status is required")
     @Pattern(regexp = "^(PAID|UNPAID|paid|unpaid)$", message = "Status must be 'PAID', 'UNPAID', 'paid', or 'unpaid'")
     private String status;
-    
-    private String statusAsString;
 
     // Default constructor
     public StudentHallFeeDTO() {}
@@ -37,7 +35,6 @@ public class StudentHallFeeDTO {
         this.studentType = studentType;
         this.year = year;
         this.status = status;
-        this.statusAsString = status.toLowerCase();
     }
 
     // Constructor with feeId (for responses)
@@ -47,7 +44,6 @@ public class StudentHallFeeDTO {
         this.studentType = studentType;
         this.year = year;
         this.status = status;
-        this.statusAsString = status.toLowerCase();
     }
 
     // Getters and Setters
@@ -89,15 +85,6 @@ public class StudentHallFeeDTO {
 
     public void setStatus(String status) {
         this.status = status;
-        this.statusAsString = status != null ? status.toLowerCase() : null;
-    }
-
-    public String getStatusAsString() {
-        return statusAsString;
-    }
-
-    public void setStatusAsString(String statusAsString) {
-        this.statusAsString = statusAsString;
     }
 
     @Override
@@ -108,7 +95,6 @@ public class StudentHallFeeDTO {
                 ", studentType='" + studentType + '\'' +
                 ", year=" + year +
                 ", status='" + status + '\'' +
-                ", statusAsString='" + statusAsString + '\'' +
                 '}';
     }
 }

@@ -1,6 +1,5 @@
 package com.HMS.hms.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -165,20 +164,7 @@ public class DiningFeeService {
         return Optional.empty();
     }
 
-    // Legacy entity-based methods (kept for backward compatibility)
-    public DiningFee createDiningFee(String type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        DiningFee diningFee = new DiningFee("resident", year, startDate, endDate, fee); // Always resident
-        return diningFeeRepo.save(diningFee);
-    }
 
-    public DiningFee createDiningFee(DiningFee.ResidencyType type, Integer year, LocalDate startDate, LocalDate endDate, BigDecimal fee) {
-        DiningFee diningFee = new DiningFee(DiningFee.ResidencyType.RESIDENT, year, startDate, endDate, fee); // Always resident
-        return diningFeeRepo.save(diningFee);
-    }
-
-    public DiningFee saveDiningFee(DiningFee fee) {
-        return diningFeeRepo.save(fee);
-    }
 
     public List<DiningFee> getAllDiningFees() {
         return diningFeeRepo.findAll();
@@ -235,5 +221,35 @@ public class DiningFeeService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Removes duplicate StudentDiningFees records, keeping only the first record for each userId-year combination.
+     * This method is intended to clean up existing duplicates caused by the previous bug.
+     */
+    public void removeDuplicateStudentDiningFees() {
+        // Get all student dining fees grouped by userId and year
+        List<Users> students = usersRepo.findByRole("STUDENT");
+        
+        for (Users student : students) {
+            // Get all dining fee records for this student
+            List<StudentDiningFees> studentFees = studentDiningFeesRepo.findByUserId(student.getUserId());
+            
+            // Group by year and remove duplicates
+            studentFees.stream()
+                .collect(Collectors.groupingBy(StudentDiningFees::getYear))
+                .forEach((year, feesForYear) -> {
+                    if (feesForYear.size() > 1) {
+                        // Delete all duplicate records except the first one (usually the oldest by ID)
+                        for (int i = 1; i < feesForYear.size(); i++) {
+                            studentDiningFeesRepo.delete(feesForYear.get(i));
+                        }
+                        
+                        System.out.println("Removed " + (feesForYear.size() - 1) + 
+                            " duplicate dining fee records for student " + student.getUserId() + 
+                            " in year " + year);
+                    }
+                });
+        }
     }
 }

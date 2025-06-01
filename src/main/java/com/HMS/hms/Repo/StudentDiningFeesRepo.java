@@ -134,4 +134,8 @@ public interface StudentDiningFeesRepo extends JpaRepository<StudentDiningFees, 
            "WHERE sdf.userId = :userId AND sdf.status = 'UNPAID' AND LOWER(sdf.studentType) = 'resident' " +
            "GROUP BY u.email, u.username")
     UnpaidFeesSummaryDTO getUnpaidFeesSummaryByUserId(@Param("userId") Long userId);
+
+    // Find by userId, year, startDate, and endDate to check for exact duplicates
+    List<StudentDiningFees> findByUserIdAndYearAndStartDateAndEndDate(
+        Long userId, Integer year, LocalDate startDate, LocalDate endDate);
 }

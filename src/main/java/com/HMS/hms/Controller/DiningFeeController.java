@@ -104,4 +104,16 @@ public class DiningFeeController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    // Remove duplicate student dining fee records (cleanup endpoint)
+    @PostMapping("/cleanup-duplicates")
+    public ResponseEntity<String> removeDuplicateStudentDiningFees() {
+        try {
+            diningFeeService.removeDuplicateStudentDiningFees();
+            return new ResponseEntity<>("Duplicate dining fee records have been successfully removed.", HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while removing duplicates: " + e.getMessage());
+        }
+    }
 }

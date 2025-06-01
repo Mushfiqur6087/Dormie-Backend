@@ -126,7 +126,7 @@ class DiningFeeControllerTest {
      */
     @Test
     @Order(3)
-    void testCreateResidentDiningFee2025() {
+    void testCreateSecondDiningFeeResident2025() {
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<DiningFeeDTO> request = new HttpEntity<>(residentFee2025, headers);
 
@@ -158,7 +158,7 @@ class DiningFeeControllerTest {
     void testGetAllDiningFees() {
         // First create the fees
         testCreateResidentDiningFee2024();
-        testCreateResidentDiningFee2025();
+        testCreateSecondDiningFeeResident2025();
         
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<Void> request = new HttpEntity<>(headers);
@@ -198,7 +198,7 @@ class DiningFeeControllerTest {
     void testGetDiningFeeById() {
         // First create fees
         testCreateResidentDiningFee2024();
-        testCreateResidentDiningFee2025();
+        testCreateSecondDiningFeeResident2025();
         
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<Void> request = new HttpEntity<>(headers);
@@ -260,7 +260,7 @@ class DiningFeeControllerTest {
     void testGetDiningFeesByYear() {
         // First create fees
         testCreateResidentDiningFee2024();
-        testCreateResidentDiningFee2025();
+        testCreateSecondDiningFeeResident2025();
         
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<Void> request = new HttpEntity<>(headers);
@@ -332,7 +332,7 @@ class DiningFeeControllerTest {
     void testGetDiningFeesInDateRange() {
         // First create fees
         testCreateResidentDiningFee2024();
-        testCreateResidentDiningFee2025();
+        testCreateSecondDiningFeeResident2025();
         
         HttpHeaders headers = createAuthHeaders();
         HttpEntity<Void> request = new HttpEntity<>(headers);

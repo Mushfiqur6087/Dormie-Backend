@@ -81,18 +81,21 @@ class StudentUpdateTest {
         assertNotNull(updatedStudent, "Updated student information should not be null");
         
         // Verify the update was successful by checking key fields
-        assertEquals(updateRequest.getDepartment(), updatedStudent.getDepartment(), 
-            "Department should be updated");
-        assertEquals(updateRequest.getBatch(), updatedStudent.getBatch(), 
-            "Batch should be updated");
-        assertEquals(updateRequest.getContactNo(), updatedStudent.getContactNo(), 
-            "Contact number should be updated");
-        assertEquals(updateRequest.getPresentAddress(), updatedStudent.getPresentAddress(), 
-            "Present address should be updated");
-        assertEquals(updateRequest.getPermanentAddress(), updatedStudent.getPermanentAddress(), 
-            "Permanent address should be updated");
-        assertEquals(updateRequest.getResidencyStatus(), updatedStudent.getResidencyStatus(), 
-            "Residency status should be updated");
+        // Use explicit null checks to avoid static analysis warnings
+        if (updatedStudent != null) {
+            assertEquals(updateRequest.getDepartment(), updatedStudent.getDepartment(), 
+                "Department should be updated");
+            assertEquals(updateRequest.getBatch(), updatedStudent.getBatch(), 
+                "Batch should be updated");
+            assertEquals(updateRequest.getContactNo(), updatedStudent.getContactNo(), 
+                "Contact number should be updated");
+            assertEquals(updateRequest.getPresentAddress(), updatedStudent.getPresentAddress(), 
+                "Present address should be updated");
+            assertEquals(updateRequest.getPermanentAddress(), updatedStudent.getPermanentAddress(), 
+                "Permanent address should be updated");
+            assertEquals(updateRequest.getResidencyStatus(), updatedStudent.getResidencyStatus(), 
+                "Residency status should be updated");
+        }
     }
 
     /**

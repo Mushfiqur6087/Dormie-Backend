@@ -1,7 +1,6 @@
 package com.HMS.hms.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,10 +11,10 @@ import org.springframework.stereotype.Service;
 import com.HMS.hms.DTO.HallFeeDTO;
 import com.HMS.hms.Repo.HallFeeRepo;
 import com.HMS.hms.Repo.StudentHallFeesRepo;
-import com.HMS.hms.Repo.UsersRepo;
+import com.HMS.hms.Repo.StudentsRepo;
 import com.HMS.hms.Tables.HallFee;
 import com.HMS.hms.Tables.StudentHallFees;
-import com.HMS.hms.Tables.Users;
+import com.HMS.hms.Tables.Students;
 
 @Service
 public class HallFeeService {
@@ -24,10 +23,10 @@ public class HallFeeService {
     private HallFeeRepo hallFeeRepo;
     
     @Autowired
-    private UsersRepo usersRepo;
+    private StudentHallFeesRepo studentHallFeesRepo;
     
     @Autowired
-    private StudentHallFeesRepo studentHallFeesRepo;
+    private StudentsRepo studentsRepo;
 
     // Create a new hall fee
     public HallFee createHallFee(String type, Integer year, BigDecimal fee) {
@@ -182,27 +181,25 @@ public class HallFeeService {
     }
     
     /**
-     * Creates StudentHallFees entries for all students and hall managers when a new hall fee is created.
-     * Both students and hall managers are automatically assigned fees that match the hall fee type.
+     * Creates StudentHallFees entries only for students whose residency status matches the hall fee type.
+     * When an "attached" hall fee is created, only students with residencyStatus="attached" get the fee.
+     * When a "resident" hall fee is created, only students with residencyStatus="resident" get the fee.
      */
     private void createStudentHallFeesForAllStudents(HallFee hallFee) {
-        // Get all users with STUDENT and HALL_MANAGER roles
-        List<Users> students = usersRepo.findByRole("STUDENT");
-        List<Users> hallManagers = usersRepo.findByRole("HALL_MANAGER");
+        // Get the hall fee type (attached/resident)
+        String feeType = hallFee.getTypeAsString().toLowerCase();
         
-        // Combine both lists
-        List<Users> allUsers = new ArrayList<>();
-        allUsers.addAll(students);
-        allUsers.addAll(hallManagers);
+        // Get only students whose residency status matches the hall fee type
+        List<Students> matchingStudents = studentsRepo.findByResidencyStatus(feeType);
         
         // Determine student type based on hall fee type
         String studentType = mapFeeTypeToStudentType(hallFee.getTypeAsString());
         
-        for (Users user : allUsers) {
-            // Create hall fee entry for the user (student or hall manager)
+        for (Students student : matchingStudents) {
+            // Create hall fee entry only for students with matching residency status
             StudentHallFees studentFee = new StudentHallFees(
-                user.getUserId(),
-                user.getUserId(), // Using userId as studentId since we don't have separate student IDs
+                hallFee.getId(),
+                student.getStudentId(),
                 studentType,
                 hallFee.getYear(),
                 StudentHallFees.PaymentStatus.UNPAID
