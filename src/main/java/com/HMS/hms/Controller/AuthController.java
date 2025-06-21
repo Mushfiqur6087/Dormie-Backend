@@ -42,8 +42,6 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
-
-    //*testing done */
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
@@ -70,7 +68,7 @@ public class AuthController {
      * Requires authentication via JWT token with ADMIN role.
      * Secured with both @PreAuthorize annotation and manual role checking.
      */
-    //*testing done */
+
     @PostMapping("admin/signup")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
