@@ -21,7 +21,7 @@ services:
       - hms-network
 
   backend:
-    build: .                          # Build from current directory Dockerfile
+    image: ghcr.io/mushfiqur6087/hms-backend:latest   # Pull pre-built image from registry
     container_name: hms-backend
     depends_on:
       db:
