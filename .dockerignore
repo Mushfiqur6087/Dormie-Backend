@@ -1,0 +1,38 @@
+target/
+.git
+*env*
+README*
+
+# IDE files
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Maven wrapper (if using base image with Maven)
+.mvn/
+mvnw
+mvnw.cmd
+
+# Test files and scripts
+test scripts/
+
+# Documentation and setup files
+ENVIRONMENT_SETUP.md
+*.md
+
+# Temporary and log files
+*.log
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+
+# Spring Boot specific
+HELP.md
