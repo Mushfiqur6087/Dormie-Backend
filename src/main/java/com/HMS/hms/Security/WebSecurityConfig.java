@@ -72,6 +72,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/auth/signin").permitAll()
                         .requestMatchers("/api/auth/admin/signup").hasRole("ADMIN")
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/payment/ssl-success-page").permitAll()
                         .requestMatchers("/payment/ssl-fail-page").permitAll()
                         .requestMatchers("/payment/ssl-cancel-page").permitAll()

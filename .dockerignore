@@ -10,11 +10,6 @@ README*
 *.iml
 *.ipr
 
-# Maven wrapper (if using base image with Maven)
-.mvn/
-mvnw
-mvnw.cmd
-
 # Test files and scripts
 test scripts/
 

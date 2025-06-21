@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "Stopping HMS Backend and PostgreSQL containers..."
+docker stop hms-backend hms-postgres 2>/dev/null || true
+
+echo "Removing HMS network..."
+docker network rm hms-network 2>/dev/null || true
+
+echo "Cleanup completed successfully!"

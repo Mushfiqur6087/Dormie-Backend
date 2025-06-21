@@ -34,3 +34,37 @@ build/
 
 ### Environment Variables ###
 .env
+
+### Docker Scripts with Secrets ###
+docker_run.sh
+docker_stop.sh
+### Application Logs ###
+*.log
+logs/
+
+### File Uploads ###
+uploads/
+!uploads/.gitkeep
+
+### Temporary Files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+### OS Generated Files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Login Credentials ###
+login.txt
+
+### Excel Files (if they contain sensitive data) ###
+*.xlsx
+*.xls
