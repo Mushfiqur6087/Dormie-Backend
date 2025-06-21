@@ -1,7 +1,7 @@
 name: Build & Push Backend
 on:
   push:
-    branches: [main]           # change to master if needed
+    branches: [master]           # change to master if needed
 
 jobs:
   build:
