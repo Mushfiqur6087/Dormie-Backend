@@ -261,6 +261,7 @@ src/
     └── static/             # Static web resources
 ```
 
+
 ### Adding New Features
 1. Create entity in `Tables/` package
 2. Create repository in `Repo/` package
