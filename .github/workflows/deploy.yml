@@ -1,0 +1,23 @@
+name: Deploy to Azure VM
+on:
+  workflow_run:
+    workflows: ["Build & Push Backend"]
+    types: [completed]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rollout via SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: azureuser
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            docker login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.CR_PAT }}
+            cd ~/app
+            docker compose pull backend
+            docker compose up -d
