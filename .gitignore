@@ -68,3 +68,4 @@ login.txt
 ### Excel Files (if they contain sensitive data) ###
 *.xlsx
 *.xls
+vm_create.txt
