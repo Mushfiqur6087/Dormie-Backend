@@ -5,15 +5,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.HMS.hms.Repo.HallFeeRepo;
-import com.HMS.hms.Tables.HallFee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.HMS.hms.DTO.StudentHallFeeDTO;
+import com.HMS.hms.Repo.HallFeeRepo;
 import com.HMS.hms.Repo.StudentHallFeesRepo;
+import com.HMS.hms.Tables.HallFee;
 import com.HMS.hms.Tables.StudentHallFees;
-import com.HMS.hms.Tables.HallFee.ResidencyType; // Ensure this is imported
 
 @Service
 public class StudentHallFeeService {

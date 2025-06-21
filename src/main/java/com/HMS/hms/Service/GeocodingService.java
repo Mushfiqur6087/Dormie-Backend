@@ -1,13 +1,15 @@
 package com.HMS.hms.Service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders; // Import HttpHeaders
-import org.springframework.http.HttpMethod;  // Import HttpMethod
-import org.springframework.http.HttpEntity; // Import HttpEntity
-import org.springframework.http.ResponseEntity; // Import ResponseEntity
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate; // Spring's HTTP client
-import org.springframework.web.util.UriComponentsBuilder; // For safe URL building
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,7 @@ public class GeocodingService {
      * @param postcode The postal code to geocode.
      * @return A double array [latitude, longitude], or null if geocoding fails.
      */
+    @SuppressWarnings({"java:S1181", "squid:S1181", "CatchAndPrintStackTrace", "UseSpecificCatch"})
     public double[] getCoordinatesFromPostcode(String postcode) {
         try {
             // Build the URL with query parameters safely
@@ -58,17 +61,19 @@ public class GeocodingService {
             HttpEntity<String> entity = new HttpEntity<>(headers); // Entity with headers, no body
 
             // Make the HTTP GET request
-            // Expecting a List of Maps, as Nominatim returns a JSON array of objects
-            ResponseEntity<List> responseEntity = restTemplate.exchange(
+            // Use ParameterizedTypeReference to handle generic types properly
+            ParameterizedTypeReference<List<Map<String, String>>> responseType = 
+                new ParameterizedTypeReference<List<Map<String, String>>>() {};
+            
+            ResponseEntity<List<Map<String, String>>> responseEntity = restTemplate.exchange(
                     uri,
                     HttpMethod.GET,
-                    entity, // Request entity with headers
-                    List.class // Expecting a List (which Jackson will map from JSON array)
+                    entity,
+                    responseType
             );
 
             // Get the response body as a List of Maps
-            // Each Map corresponds to a JSON object in the array (e.g., {"lat": "...", "lon": "..."})
-            List<Map<String, String>> jsonResponse = (List<Map<String, String>>) responseEntity.getBody();
+            List<Map<String, String>> jsonResponse = responseEntity.getBody();
 
             if (jsonResponse != null && !jsonResponse.isEmpty()) {
                 Map<String, String> firstResult = jsonResponse.get(0);
@@ -80,9 +85,11 @@ public class GeocodingService {
                 logger.warn("Couldn't find coordinates for postcode: {}", postcode);
                 return null;
             }
-        } catch (Exception e) {
+        } catch (RestClientException | NumberFormatException e) {
             logger.error("Error during geocoding for postcode {}: {}", postcode, e.getMessage(), e);
-            // In a production app, you might rethrow a custom exception or handle more gracefully
+            return null;
+        } catch (Exception e) { // NOSONAR - Intentional catch-all for unexpected exceptions
+            logger.error("Unexpected error during geocoding for postcode {}: {}", postcode, e.getMessage(), e);
             return null;
         }
     }

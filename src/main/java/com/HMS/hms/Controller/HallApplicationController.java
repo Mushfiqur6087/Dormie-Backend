@@ -1,28 +1,35 @@
 package com.HMS.hms.Controller;
 
+import java.io.IOException;
+import java.util.List; // Import the new Summary DTO
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired; // Import HallApplication entity for detail view
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity; // Import MediaType
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication; // Make sure this is imported
+import org.springframework.security.core.context.SecurityContextHolder; // Make sure this is imported
+import org.springframework.web.bind.annotation.CrossOrigin; // Make sure this is imported
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping; // For getApplicationDetails method
+import org.springframework.web.bind.annotation.RequestParam; // Ensure this is imported
+import org.springframework.web.bind.annotation.RestController; // Ensure this is imported
+
 import com.HMS.hms.DTO.HallApplicationRequest;
-import com.HMS.hms.DTO.HallApplicationSummaryDTO; // Import the new Summary DTO
+import com.HMS.hms.DTO.HallApplicationSummaryDTO;
 import com.HMS.hms.DTO.MessageResponse;
 import com.HMS.hms.Security.UserDetailsImpl;
 import com.HMS.hms.Service.HallApplicationService;
-import com.HMS.hms.Tables.HallApplication; // Import HallApplication entity for detail view
+import com.HMS.hms.Tables.HallApplication;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType; // Import MediaType
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; // Make sure this is imported
-import org.springframework.security.core.Authentication; // Make sure this is imported
-import org.springframework.security.core.context.SecurityContextHolder; // Make sure this is imported
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional; // For getApplicationDetails method
-import org.slf4j.Logger; // Ensure this is imported
-import org.slf4j.LoggerFactory; // Ensure this is imported
 
 
 @RestController

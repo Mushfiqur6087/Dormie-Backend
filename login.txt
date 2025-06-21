@@ -1,0 +1,9 @@
+Email: admin@dormie.com
+Username: admin
+Password: Admin123!
+
+---------------------------------------------
+
+Email: provost@dormie.com
+Username: provost
+Password: Provost123!
