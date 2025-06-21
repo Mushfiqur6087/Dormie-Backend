@@ -7,3 +7,31 @@ Password: Admin123!
 Email: provost@dormie.com
 Username: provost
 Password: Provost123!
+
+Row 2: Success - Student user registered successfully!
+Username: Golam
+
+Email: 2005094@cse.buet.ac.bd
+
+Student ID: 2005094
+
+Row 3: Success - Student user registered successfully!
+Username: Musfiqur
+
+Email: 2005107@cse.buet.ac.bd
+
+Student ID: 2005107
+
+Row 4: Success - Student user registered successfully!
+Username: Redwan
+
+Email: 2005108@cse.buet.ac.bd
+
+Student ID: 2005108
+
+Row 5: Success - Student user registered successfully!
+Username: Kabya
+
+Email: 2005112@cse.buet.ac.bd
+
+Student ID: 2005112
