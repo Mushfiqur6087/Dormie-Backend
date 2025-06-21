@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ public class StudentHallFeeController {
 
     @Autowired
     private StudentHallFeeService studentHallFeeService;
+
 
     // Get all student hall fees
     @GetMapping
@@ -48,9 +50,11 @@ public class StudentHallFeeController {
 
     // Get student hall fees by user ID
     @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Optional<StudentHallFeeDTO>> getStudentHallFeesByUserId(@PathVariable Long userId) {
         try {
             Optional<StudentHallFeeDTO> fees = studentHallFeeService.getStudentHallFeesByUserIdDTO(userId);
+            System.out.println(fees);
             return new ResponseEntity<>(fees, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -59,6 +63,7 @@ public class StudentHallFeeController {
 
     // Get student hall fees by student ID
     @GetMapping("/student/{studentId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<StudentHallFeeDTO>> getStudentHallFeesByStudentId(@PathVariable Long studentId) {
         try {
             List<StudentHallFeeDTO> fees = studentHallFeeService.getStudentHallFeesByStudentIdDTO(studentId);

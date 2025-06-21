@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
+import java.math.BigDecimal;
+
 public class StudentHallFeeDTO {
     
     private Long feeId;
@@ -26,6 +28,8 @@ public class StudentHallFeeDTO {
     @Pattern(regexp = "^(PAID|UNPAID|paid|unpaid)$", message = "Status must be 'PAID', 'UNPAID', 'paid', or 'unpaid'")
     private String status;
 
+    private BigDecimal dueAmount;
+
     // Default constructor
     public StudentHallFeeDTO() {}
 
@@ -38,12 +42,13 @@ public class StudentHallFeeDTO {
     }
 
     // Constructor with feeId (for responses)
-    public StudentHallFeeDTO(Long feeId, Long studentId, String studentType, Integer year, String status) {
+    public StudentHallFeeDTO(Long feeId, Long studentId, String studentType, Integer year, String status, BigDecimal baseFeeAmount) {
         this.feeId = feeId;
         this.studentId = studentId;
         this.studentType = studentType;
         this.year = year;
         this.status = status;
+        this.dueAmount=baseFeeAmount;
     }
 
     // Getters and Setters
@@ -87,6 +92,10 @@ public class StudentHallFeeDTO {
         this.status = status;
     }
 
+    public void setDueAmount(BigDecimal dueAmount){this.dueAmount=dueAmount;}
+
+    public BigDecimal getDueAmount(){return this.dueAmount;}
+
     @Override
     public String toString() {
         return "StudentHallFeeDTO{" +
@@ -95,6 +104,7 @@ public class StudentHallFeeDTO {
                 ", studentType='" + studentType + '\'' +
                 ", year=" + year +
                 ", status='" + status + '\'' +
+                ", dueAmount="+dueAmount+
                 '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.HMS.hms.DTO;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Max;
@@ -14,6 +15,8 @@ public class StudentDiningFeeDTO {
     
     @NotNull(message = "Student ID is required")
     private Long studentId;
+
+
     
     @NotBlank(message = "Student type is required")
     @Pattern(regexp = "^(resident|attached)$", message = "Student type must be 'resident' or 'attached'")
@@ -60,6 +63,7 @@ public class StudentDiningFeeDTO {
         this.status = status;
     }
 
+
     // Getters and Setters
     public Long getFeeId() {
         return feeId;
@@ -76,6 +80,8 @@ public class StudentDiningFeeDTO {
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
     }
+
+
 
     public String getStudentType() {
         return studentType;
@@ -116,6 +122,7 @@ public class StudentDiningFeeDTO {
     public void setStatus(String status) {
         this.status = status;
     }
+
 
     @Override
     public String toString() {

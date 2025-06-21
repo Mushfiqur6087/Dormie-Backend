@@ -5,6 +5,7 @@ public enum UserRole {
     HALL_MANAGER("HALL_MANAGER"),
     ADMIN("ADMIN"),
     AUTHORITY("AUTHORITY"),
+    PROVOST("PROVOST"),
     SUPERVISOR("SUPERVISOR");
 
     private final String value;
@@ -34,6 +35,7 @@ public enum UserRole {
             case "hall_manager", "hallmanager" -> HALL_MANAGER;
             case "student" -> STUDENT;
             case "authority" -> AUTHORITY;
+            case "provost"  ->PROVOST;
             case "supervisor" -> SUPERVISOR;
             default -> STUDENT; // Default to student if unknown role
         };

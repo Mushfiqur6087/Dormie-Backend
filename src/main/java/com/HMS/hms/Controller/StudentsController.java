@@ -4,15 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.HMS.hms.DTO.StudentDTO;
 import com.HMS.hms.DTO.StudentUpdateRequest;
@@ -105,6 +103,62 @@ public class StudentsController {
             
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error updating student information: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint for an authenticated user to get their student ID by providing their email.
+     * Only accessible by authenticated students, admins, or hall managers.
+     * The email provided must match the authenticated user's email for students.
+     * Admins/Hall Managers can retrieve any student's ID by email.
+     *
+     * @param email The email address of the student.
+     * @return ResponseEntity with the student ID or an error message.
+     */
+    @GetMapping("/get-id-by-email") // Or /student-id?email={email}
+    @PreAuthorize("isAuthenticated()") // Only authenticated users can access
+    public ResponseEntity<?> getStudentIdByEmail(@RequestParam String email) {
+        // Get the authenticated user's email from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = null;
+        String authenticatedRole = null;
+
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            authenticatedEmail = userDetails.getEmail();
+            // Assuming getAuthorities() returns list with one role string like "ROLE_STUDENT"
+            authenticatedRole = userDetails.getAuthorities().stream().findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("")
+                    .replace("ROLE_", ""); // Remove "ROLE_" prefix for comparison
+        }
+
+        // --- Authorization Logic ---
+        // 1. If the authenticated user is a STUDENT, they can ONLY query their own studentId.
+        if ("STUDENT".equalsIgnoreCase(authenticatedRole)) {
+            if (!email.equalsIgnoreCase(authenticatedEmail)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Error: Students can only query their own student ID.");
+            }
+        }
+        // 2. If the authenticated user is an ADMIN or HALL_MANAGER, they can query ANY student's ID.
+        else if (!"ADMIN".equalsIgnoreCase(authenticatedRole) && !"HALL_MANAGER".equalsIgnoreCase(authenticatedRole)) {
+            // If it's not a STUDENT, ADMIN, or HALL_MANAGER trying to access
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Error: Only students can query their own ID. Only Admins/Hall Managers can query others.");
+        }
+        // --- End Authorization Logic ---
+
+
+        // Attempt to retrieve student ID
+        Optional<Long> studentIdOpt = studentsService.getStudentIdByEmail(email);
+
+        if (studentIdOpt.isPresent()) {
+            return ResponseEntity.ok(studentIdOpt.get()); // Return the student ID
+        } else {
+            // Return 404 if not found or if the email does not belong to a student
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Student ID not found for provided email or user is not a student.");
         }
     }
 }

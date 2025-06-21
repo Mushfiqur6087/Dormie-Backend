@@ -85,4 +85,6 @@ public class AdminBootstrapConfig implements CommandLineRunner {
             logger.error("Error occurred while creating default admin user: {}", e.getMessage(), e);
         }
     }
+
+
 }

@@ -11,12 +11,35 @@ import com.HMS.hms.DTO.StudentDTO;
 import com.HMS.hms.DTO.StudentUpdateRequest;
 import com.HMS.hms.Repo.StudentsRepo;
 import com.HMS.hms.Tables.Students;
+import com.HMS.hms.Repo.UsersRepo; // Make sure this is imported
+import com.HMS.hms.Tables.Users; // Make sure this is imported
+
 
 @Service
 public class StudentsService {
     
     @Autowired
     private StudentsRepo studentsRepo;
+
+    @Autowired
+    private UsersRepo usersRepo; // <--- ADD THIS AUTOWIRED REPO
+
+
+    public Optional<Long> getStudentIdByEmail(String email) {
+        // First, find the user by email
+        Optional<Users> userOpt = usersRepo.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            Users user = userOpt.get();
+            // Ensure the user found actually has the STUDENT role
+            if ("STUDENT".equalsIgnoreCase(user.getRole())) {
+                // Then, find the student profile associated with that user ID
+                Optional<Students> studentOpt = studentsRepo.findByUserId(user.getUserId());
+                return studentOpt.map(Students::getStudentId); // Map Students object to its studentId
+            }
+        }
+        return Optional.empty(); // User not found, or not a student, or student profile not found
+    }
     
     /**
      * Get all students

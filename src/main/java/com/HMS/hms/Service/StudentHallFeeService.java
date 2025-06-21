@@ -1,15 +1,19 @@
 package com.HMS.hms.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.HMS.hms.Repo.HallFeeRepo;
+import com.HMS.hms.Tables.HallFee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.HMS.hms.DTO.StudentHallFeeDTO;
 import com.HMS.hms.Repo.StudentHallFeesRepo;
 import com.HMS.hms.Tables.StudentHallFees;
+import com.HMS.hms.Tables.HallFee.ResidencyType; // Ensure this is imported
 
 @Service
 public class StudentHallFeeService {
@@ -17,15 +21,35 @@ public class StudentHallFeeService {
     @Autowired
     private StudentHallFeesRepo studentHallFeesRepo;
 
+    @Autowired
+    private HallFeeRepo hallFeeRepo;
+
     // DTO Conversion Methods
-    private StudentHallFeeDTO convertToDTO(StudentHallFees entity) {
-        return new StudentHallFeeDTO(
-            entity.getFeeId(),
-            entity.getStudentId(),
-            entity.getStudentType(),
-            entity.getYear(),
-            entity.getStatus().toString()
+    public StudentHallFeeDTO convertToDTO(StudentHallFees studentHallFee) {
+        // Find the base HallFee amount for this student's type and year
+        Optional<HallFee> hallFeeOpt = hallFeeRepo.findByTypeAndYear(
+                HallFee.ResidencyType.fromString(studentHallFee.getStudentType()),
+                studentHallFee.getYear()
         );
+        // Get the base fee, default to ZERO if not found (e.g., fee not set for that year/type)
+        BigDecimal baseFeeAmount = hallFeeOpt.map(HallFee::getFee).orElse(BigDecimal.ZERO);
+
+        // Calculate the due amount based on status
+        BigDecimal calculatedDueAmount = BigDecimal.ZERO;
+        if ("unpaid".equalsIgnoreCase(studentHallFee.getStatusAsString())) {
+            calculatedDueAmount = baseFeeAmount;
+        }
+
+        // --- FIX IS HERE: Add studentHallFee.getUserId() as the second argument ---
+        return new StudentHallFeeDTO(
+                studentHallFee.getFeeId(),
+                studentHallFee.getStudentId(),
+                studentHallFee.getStudentType(),
+                studentHallFee.getYear(),
+                studentHallFee.getStatusAsString(),
+                calculatedDueAmount // Pass the calculated due amount
+        );
+        // --- END FIX ---
     }
 
     private List<StudentHallFeeDTO> convertToDTOList(List<StudentHallFees> entities) {
