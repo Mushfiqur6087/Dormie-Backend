@@ -4,79 +4,40 @@ services:
   db:
     image: postgres:15
     container_name: hms-postgres
-    ports:
-      - "5433:5432"              # host→container (using 5433 to avoid conflicts)
+    # No ports exposed ⇒ DB reachable only inside Docker network
     volumes:
       - db_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-HMS}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    env_file:
+      - .env                       # pulls POSTGRES_* vars
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - hms-network
+    networks: [hms-network]
 
   backend:
-    image: ghcr.io/mushfiqur6087/hms-backend:latest   # Pull pre-built image from registry
+    image: ghcr.io/mushfiqur6087/hms-backend:latest
     container_name: hms-backend
     depends_on:
       db:
-        condition: service_healthy    # Wait for DB to be healthy
+        condition: service_healthy
     ports:
-      - "8080:8080"
-    environment:
-      # Database configuration
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-HMS}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-true}
-      
-      # Management and monitoring
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:-health,info}
-      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:-always}
-      
-      # JWT configuration
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET environment variable is required}
-      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
-      
-      # SSLCommerz payment gateway
-      SSLCOMMERZ_STORE_ID: ${SSLCOMMERZ_STORE_ID:?SSLCOMMERZ_STORE_ID environment variable is required}
-      SSLCOMMERZ_STORE_PASSWORD: ${SSLCOMMERZ_STORE_PASSWORD:?SSLCOMMERZ_STORE_PASSWORD environment variable is required}
-      SSLCOMMERZ_SANDBOX_URL: ${SSLCOMMERZ_SANDBOX_URL:-https://sandbox.sslcommerz.com}
-      SSLCOMMERZ_PRODUCTION_URL: ${SSLCOMMERZ_PRODUCTION_URL:-https://securepay.sslcommerz.com}
-      SSLCOMMERZ_ENVIRONMENT: ${SSLCOMMERZ_ENVIRONMENT:-sandbox}
-      
-      # File upload configuration
-      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/uploads}
-      
-      # Nominatim (geocoding) configuration
-      NOMINATIM_BASE_URL: ${NOMINATIM_BASE_URL:-https://nominatim.openstreetmap.org/search}
-      NOMINATIM_USER_AGENT: ${NOMINATIM_USER_AGENT:-HMS_HallManagementSystem/1.0 (contact@your-university.edu)}
-      
-      # Hall configuration
-      HALL_POSTCODE: ${HALL_POSTCODE:-1000}
-      
-      # JVM optimization
-      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1g -XX:+UseG1GC}
+      - "8080:8080"                # public API
+    env_file:
+      - .env                       # pulls SPRING_*, JWT_*, etc.
     volumes:
-      - ./uploads:/app/uploads        # Persist uploads on host
+      - ./uploads:/app/uploads
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s             # Give the app time to start
-    networks:
-      - hms-network
+      start_period: 60s
+    networks: [hms-network]
 
 volumes:
   db_data:
-    driver: local
 
 networks:
   hms-network:
