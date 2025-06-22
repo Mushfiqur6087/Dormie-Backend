@@ -8,7 +8,7 @@ Getting "Unauthorized error: Full authentication is required to access this reso
 ### 1. Test Public Endpoints First
 ```bash
 # Test if the application is running
-curl -X GET http://YOUR_AZURE_VM_IP:8080/api/test/public
+curl -X GET http://172.187.160.142:8080/api/test/public
 
 # Test health endpoint
 curl -X GET http://YOUR_AZURE_VM_IP:8080/actuator/health
@@ -36,10 +36,19 @@ Ensure these environment variables are set in Azure VM:
 ```bash
 export JWT_SECRET="your-jwt-secret-here"
 export JWT_EXPIRATION_MS="86400000"
-export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/HMS"
+export SPRING_DATASOURCE_URL="jdbc:postgresql://db:5432/HMS"
 export SPRING_DATASOURCE_USERNAME="postgres"
 export SPRING_DATASOURCE_PASSWORD="your-db-password"
+export SPRING_JPA_HIBERNATE_DDL_AUTO="create-drop"
+export SPRING_JPA_SHOW_SQL="true"
 ```
+
+**⚠️ IMPORTANT**: If using `create-drop` for `SPRING_JPA_HIBERNATE_DDL_AUTO`, the database schema will be recreated on every startup. This can cause startup failures if:
+- Database initialization takes too long
+- There are existing data constraints
+- Multiple instances try to create schema simultaneously
+
+For production, consider using `update` or `validate` instead.
 
 #### B. CORS Configuration
 The current CORS config allows all origins (`*`). If still having issues, check:
@@ -133,3 +142,54 @@ With the enhanced logging added, you should see:
 - Authentication success/failure details
 
 Look for patterns in the logs to identify root cause.
+
+## Container Startup Failures
+
+### Issue: Backend container exits with status 1
+
+This typically happens when:
+1. Database connection fails
+2. Environment variables are missing or incorrect
+3. JPA configuration issues with `create-drop`
+
+### Debugging Steps:
+
+```bash
+# Check container logs for detailed error
+docker-compose logs hms-backend
+
+# Check if database is accessible
+docker-compose exec hms-backend ping db
+
+# Verify environment variables are loaded correctly
+docker-compose exec hms-backend env | grep SPRING
+```
+
+### Common Fixes:
+
+#### Fix 1: Database Connection Issues
+```bash
+# Ensure database is healthy before starting backend
+docker-compose up -d db
+docker-compose ps  # Wait for db to be healthy
+docker-compose up -d backend
+```
+
+#### Fix 2: JPA DDL-Auto Issues
+If using `create-drop`, the application recreates the schema on every restart. This can fail if:
+- There are existing connections to the database
+- The application doesn't have sufficient permissions
+- Database initialization takes too long
+
+Quick fix - change to `update` in your `.env` file:
+```bash
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+```
+
+#### Fix 3: JWT Secret Generation
+The JWT secret in `.env` uses a shell command that may not execute properly in Docker:
+```bash
+# Instead of: JWT_SECRET=$(openssl rand -base64 48)
+# Use a static value for deployment:
+JWT_SECRET=your-base64-encoded-secret-here
+```
