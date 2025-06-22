@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
-@RestController
-@RequestMapping("/api/test")
+@RestController("authTestController")
+@RequestMapping("/api/auth-test")
 public class TestController {
     
     @GetMapping("/all")
