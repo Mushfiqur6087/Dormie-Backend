@@ -70,7 +70,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signin").permitAll()
-                        .requestMatchers("/api/auth/admin/signup").hasRole("ADMIN")
+                        .requestMatchers("/api/auth/admin/signup").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/auth-test/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()

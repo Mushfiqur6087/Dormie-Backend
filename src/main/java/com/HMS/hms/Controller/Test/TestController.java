@@ -17,31 +17,31 @@ public class TestController {
     }
 
     @GetMapping("/user")
-    @PreAuthorize("hasRole('STUDENT') or hasRole('HALL_MANAGER') or hasRole('ADMIN') or hasRole('AUTHORITY') or hasRole('SUPERVISOR')")
+    @PreAuthorize("isAuthenticated()")
     public String userAccess() {
         return "User Content.";
     }
 
     @GetMapping("/manager")
-    @PreAuthorize("hasRole('HALL_MANAGER')")
+    @PreAuthorize("isAuthenticated()")
     public String managerAccess() {
         return "Hall Manager Board.";
     }
 
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public String adminAccess() {
         return "Admin Board.";
     }
 
     @GetMapping("/authority")
-    @PreAuthorize("hasRole('AUTHORITY')")
+    @PreAuthorize("isAuthenticated()")
     public String authorityAccess() {
         return "Authority Board.";
     }
 
     @GetMapping("/supervisor")
-    @PreAuthorize("hasRole('SUPERVISOR')")
+    @PreAuthorize("isAuthenticated()")
     public String supervisorAccess() {
         return "Supervisor Board.";
     }

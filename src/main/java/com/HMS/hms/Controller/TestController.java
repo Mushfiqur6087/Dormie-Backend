@@ -26,7 +26,7 @@ public class TestController {
     }
 
     @GetMapping("/protected")
-    @PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> protectedEndpoint() {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Protected endpoint accessible - authentication working");
@@ -36,7 +36,7 @@ public class TestController {
     }
 
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> adminEndpoint() {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Admin endpoint accessible");

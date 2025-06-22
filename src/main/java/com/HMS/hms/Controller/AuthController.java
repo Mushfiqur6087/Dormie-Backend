@@ -24,7 +24,6 @@ import com.HMS.hms.DTO.SignupRequest;
 import com.HMS.hms.Security.JwtUtils;
 import com.HMS.hms.Security.UserDetailsImpl;
 import com.HMS.hms.Service.UserService;
-import com.HMS.hms.enums.UserRole;
 
 import jakarta.validation.Valid;
 
@@ -67,45 +66,24 @@ public class AuthController {
 
     /**
      * Admin-only endpoint for creating new users.
-     * Requires authentication via JWT token with ADMIN role.
-     * Secured with both @PreAuthorize annotation and manual role checking.
+     * Requires authentication via JWT token.
      */
     //*testing done */
     @PostMapping("admin/signup")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         
-        // Additional check to ensure current user is admin
+        // Check authentication
         Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
         if (currentAuth == null || !currentAuth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new MessageResponse("Error: Authentication required!"));
         }
         
-        // Check if current user has ADMIN role
-        boolean isAdmin = currentAuth.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-        
-        if (!isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new MessageResponse("Error: Only administrators can create new users!"));
-        }
-
-        String strRole = signUpRequest.getRole();
-        
-        // Use the UserRole enum for consistent role handling
-        UserRole userRole = UserRole.fromString(strRole);
-        
-        // Check if admin is trying to create a student
-        if (userRole != UserRole.STUDENT) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Admin can only create STUDENT users!"));
-        }
-        
         try {
-            // Create student user using service layer
+            // Create user using service layer
             userService.createStudentUser(signUpRequest);
-            return ResponseEntity.ok(new MessageResponse("Student user registered successfully!"));
+            return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: " + e.getMessage()));

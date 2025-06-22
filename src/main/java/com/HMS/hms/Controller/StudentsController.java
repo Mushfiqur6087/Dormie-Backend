@@ -8,9 +8,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.HMS.hms.DTO.StudentDTO;
 import com.HMS.hms.DTO.StudentUpdateRequest;
@@ -118,37 +123,13 @@ public class StudentsController {
     @GetMapping("/get-id-by-email") // Or /student-id?email={email}
     @PreAuthorize("isAuthenticated()") // Only authenticated users can access
     public ResponseEntity<?> getStudentIdByEmail(@RequestParam String email) {
-        // Get the authenticated user's email from the security context
+        // Get the authenticated user from the security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String authenticatedEmail = null;
-        String authenticatedRole = null;
 
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
-            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            authenticatedEmail = userDetails.getEmail();
-            // Assuming getAuthorities() returns list with one role string like "ROLE_STUDENT"
-            authenticatedRole = userDetails.getAuthorities().stream().findFirst()
-                    .map(GrantedAuthority::getAuthority)
-                    .orElse("")
-                    .replace("ROLE_", ""); // Remove "ROLE_" prefix for comparison
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Error: Authentication required.");
         }
-
-        // --- Authorization Logic ---
-        // 1. If the authenticated user is a STUDENT, they can ONLY query their own studentId.
-        if ("STUDENT".equalsIgnoreCase(authenticatedRole)) {
-            if (!email.equalsIgnoreCase(authenticatedEmail)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Error: Students can only query their own student ID.");
-            }
-        }
-        // 2. If the authenticated user is an ADMIN or HALL_MANAGER, they can query ANY student's ID.
-        else if (!"ADMIN".equalsIgnoreCase(authenticatedRole) && !"HALL_MANAGER".equalsIgnoreCase(authenticatedRole)) {
-            // If it's not a STUDENT, ADMIN, or HALL_MANAGER trying to access
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Error: Only students can query their own ID. Only Admins/Hall Managers can query others.");
-        }
-        // --- End Authorization Logic ---
-
 
         // Attempt to retrieve student ID
         Optional<Long> studentIdOpt = studentsService.getStudentIdByEmail(email);

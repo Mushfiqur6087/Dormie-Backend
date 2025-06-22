@@ -51,7 +51,7 @@ public class HallApplicationController {
      * @return ResponseEntity with success/error message.
      */
     @PostMapping(value = "/seat", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('STUDENT')") // Only logged-in students can apply
+    @PreAuthorize("isAuthenticated()") // Only logged-in users can apply
     public ResponseEntity<?> submitSeatApplication(
             @ModelAttribute @Valid HallApplicationRequest applicationRequest
     ) {
@@ -87,7 +87,7 @@ public class HallApplicationController {
      * @return List of HallApplicationSummaryDTOs.
      */
     @GetMapping("/all-summaries") // e.g., GET /api/applications/all-summaries?sortBy=familyIncome&sortOrder=asc
-    @PreAuthorize("hasRole('PROVOST') or hasRole('ADMIN')") // Only Provosts and Admins can view all summaries
+    @PreAuthorize("isAuthenticated()") // Only authenticated users can view all summaries
     public ResponseEntity<List<HallApplicationSummaryDTO>> getAllApplicationSummaries(
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortOrder
@@ -107,7 +107,7 @@ public class HallApplicationController {
      * @return Full HallApplication entity.
      */
     @GetMapping("/{applicationId}")
-    @PreAuthorize("hasRole('PROVOST') or hasRole('ADMIN')") // Only Provosts and Admins can view full details
+    @PreAuthorize("isAuthenticated()") // Only authenticated users can view full details
     public ResponseEntity<HallApplication> getApplicationDetails(@PathVariable Long applicationId) {
         try {
             Optional<HallApplication> application = hallApplicationService.getHallApplicationById(applicationId);
@@ -125,7 +125,7 @@ public class HallApplicationController {
      * @return MessageResponse on success or error.
      */
     @PostMapping("/{applicationId}/accept")
-    @PreAuthorize("hasRole('PROVOST') or hasRole('ADMIN')") // Only Provosts and Admins can accept
+    @PreAuthorize("isAuthenticated()") // Only authenticated users can accept
     public ResponseEntity<?> acceptApplication(@PathVariable Long applicationId) {
         try {
             hallApplicationService.acceptHallApplication(applicationId);
@@ -145,7 +145,7 @@ public class HallApplicationController {
      * @return MessageResponse on success or error.
      */
     @PostMapping("/{applicationId}/reject") // You can use @PutMapping if it's more semantically correct for 'update'
-    @PreAuthorize("hasRole('PROVOST') or hasRole('ADMIN')") // Only Provosts and Admins can reject
+    @PreAuthorize("isAuthenticated()") // Only authenticated users can reject
     public ResponseEntity<?> rejectApplication(@PathVariable Long applicationId) {
         try {
             hallApplicationService.rejectHallApplication(applicationId);
