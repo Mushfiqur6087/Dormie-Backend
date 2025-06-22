@@ -1,4 +1,4 @@
-BASE_URL="http://localhost:8080"
+BASE_URL="http://172.187.160.142:8080"
 CONTENT_TYPE="Content-Type: application/json"
 
 echo "🚀 Starting Dining Fee Testing Workflow"
