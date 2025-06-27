@@ -1,15 +1,16 @@
 package com.HMS.hms.Service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
-import java.util.UUID; // To generate unique file names
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile; // To generate unique file names
 
 @Service
 public class FileStorageService {
@@ -22,7 +23,7 @@ public class FileStorageService {
         try {
             // Create the upload directory if it does not exist
             Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
+        } catch (IOException | SecurityException ex) { // Multi-catch for both possible exceptions
             throw new RuntimeException("Could not create the upload directory: " + uploadDir, ex);
         }
     }
